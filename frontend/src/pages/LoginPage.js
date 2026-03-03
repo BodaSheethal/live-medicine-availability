@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 
 function LoginPage() {
@@ -40,6 +40,9 @@ function LoginPage() {
         <button className="btn" type="submit">
           Login
         </button>
+        <p className="auth-helper">
+          Not registered? <Link to="/register">Create an account</Link>
+        </p>
       </form>
       {message && <p className="message">{message}</p>}
     </div>

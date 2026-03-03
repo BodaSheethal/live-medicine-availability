@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../api/axios";
 
 function RegisterPage() {
@@ -44,6 +44,9 @@ function RegisterPage() {
         <button className="btn" type="submit">
           Register
         </button>
+        <p className="auth-helper">
+          Already have an account? <Link to="/login">Login</Link>
+        </p>
       </form>
       {message && <p className="message">{message}</p>}
     </div>
