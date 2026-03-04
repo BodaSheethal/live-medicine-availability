@@ -27,7 +27,12 @@ function Navbar() {
             <Link to="/search">Search</Link>
             <Link to="/nearby">Nearby</Link>
             <Link to="/emergency">Emergency</Link>
-            {user.role === "pharmacy" && <Link to="/pharmacy-stock">My Stock</Link>}
+            {user.role === "pharmacy" && (
+              <>
+                <Link to="/pharmacy-stock">My Stock</Link>
+                <Link to="/pharmacy-add-stock">Add Stock</Link>
+              </>
+            )}
             {user.role === "admin" && <Link to="/admin">Admin</Link>}
             <button type="button" onClick={handleLogout} className="link-btn">
               Logout

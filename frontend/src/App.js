@@ -9,6 +9,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import AdminDataPage from "./pages/AdminDataPage";
 import PharmacyStockPage from "./pages/PharmacyStockPage";
+import PharmacyAddStockPage from "./pages/PharmacyAddStockPage";
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -79,6 +80,14 @@ function App() {
             element={
               <PharmacyRoute>
                 <PharmacyStockPage />
+              </PharmacyRoute>
+            }
+          />
+          <Route
+            path="/pharmacy-add-stock"
+            element={
+              <PharmacyRoute>
+                <PharmacyAddStockPage />
               </PharmacyRoute>
             }
           />
