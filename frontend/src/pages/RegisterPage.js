@@ -4,7 +4,14 @@ import api from "../api/axios";
 
 function RegisterPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: "", email: "", password: "", role: "user" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "user",
+    pharmacyLicenseNo: "",
+    pharmacyStoreName: "",
+  });
   const [message, setMessage] = useState("");
 
   const handleChange = (e) => {
@@ -40,6 +47,22 @@ function RegisterPage() {
           <option value="user">User</option>
           <option value="pharmacy">Pharmacy</option>
         </select>
+        {form.role === "pharmacy" && (
+          <>
+            <input
+              name="pharmacyStoreName"
+              placeholder="Pharmacy Store Name"
+              onChange={handleChange}
+              required
+            />
+            <input
+              name="pharmacyLicenseNo"
+              placeholder="Pharmacy License Number"
+              onChange={handleChange}
+              required
+            />
+          </>
+        )}
         <button className="btn" type="submit">
           Register
         </button>

@@ -6,7 +6,7 @@ const allowedRoles = ["user", "pharmacy"];
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, pharmacyLicenseNo, pharmacyStoreName } = req.body;
 
     if (!name || !email || !password) {
       return res
@@ -19,6 +19,13 @@ exports.register = async (req, res) => {
       return res.status(400).json({ success: false, message: "Only user or pharmacy role is allowed" });
     }
 
+    if (safeRole === "pharmacy" && (!pharmacyLicenseNo || !pharmacyStoreName)) {
+      return res.status(400).json({
+        success: false,
+        message: "Pharmacy license number and pharmacy store name are required",
+      });
+    }
+
     const existingUsers = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
     if (existingUsers.rowCount > 0) {
       return res.status(409).json({ success: false, message: "Email already registered" });
@@ -26,13 +33,27 @@ exports.register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
-      "INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id",
-      [name, email, hashedPassword, safeRole]
+      `INSERT INTO users
+       (name, email, password, role, pharmacy_verified, pharmacy_license_no, pharmacy_store_name)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING id`,
+      [
+        name,
+        email,
+        hashedPassword,
+        safeRole,
+        safeRole === "pharmacy" ? false : true,
+        safeRole === "pharmacy" ? pharmacyLicenseNo : null,
+        safeRole === "pharmacy" ? pharmacyStoreName : null,
+      ]
     );
 
     return res.status(201).json({
       success: true,
-      message: "User registered successfully",
+      message:
+        safeRole === "pharmacy"
+          ? "Pharmacy registered. Await admin verification before stock updates."
+          : "User registered successfully",
       userId: result.rows[0].id,
     });
   } catch (error) {
@@ -50,7 +71,9 @@ exports.login = async (req, res) => {
     }
 
     const users = await pool.query(
-      "SELECT id, name, email, password, role FROM users WHERE email = $1",
+      `SELECT id, name, email, password, role, pharmacy_verified
+       FROM users
+       WHERE email = $1`,
       [email]
     );
 
@@ -79,6 +102,7 @@ exports.login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        pharmacyVerified: user.pharmacy_verified,
       },
     });
   } catch (error) {

@@ -4,8 +4,18 @@ CREATE TABLE IF NOT EXISTS users (
   email VARCHAR(120) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
   role VARCHAR(20) NOT NULL CHECK (role IN ('user', 'pharmacy', 'admin')),
+  pharmacy_verified BOOLEAN NOT NULL DEFAULT FALSE,
+  pharmacy_license_no VARCHAR(100),
+  pharmacy_store_name VARCHAR(150),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS pharmacy_verified BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS pharmacy_license_no VARCHAR(100);
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS pharmacy_store_name VARCHAR(150);
 
 CREATE TABLE IF NOT EXISTS medicines (
   id SERIAL PRIMARY KEY,
@@ -44,6 +54,11 @@ INSERT INTO users (name, email, password, role) VALUES
 ('HealthPlus Pharmacy Owner', 'pharmacy2@example.com', '$2a$10$35nIPtx9jGeL9So5soO2du3XtA9V6h6Sa2atK.jWnMbxY0nQjCW3u', 'pharmacy'),
 ('Admin', 'admin@example.com', '$2a$10$35nIPtx9jGeL9So5soO2du3XtA9V6h6Sa2atK.jWnMbxY0nQjCW3u', 'admin')
 ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name;
+
+UPDATE users
+SET pharmacy_verified = TRUE,
+    pharmacy_store_name = COALESCE(pharmacy_store_name, name)
+WHERE role = 'pharmacy';
 
 INSERT INTO pharmacies (user_id, name, latitude, longitude, open_24x7) VALUES
 ((SELECT id FROM users WHERE email = 'pharmacy1@example.com'), 'CityCare Pharmacy', 12.9716, 77.5946, TRUE),

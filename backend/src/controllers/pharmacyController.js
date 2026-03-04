@@ -66,6 +66,22 @@ exports.updateStock = async (req, res) => {
       });
     }
 
+    const userRows = await pool.query(
+      "SELECT pharmacy_verified FROM users WHERE id = $1 AND role = 'pharmacy'",
+      [userId]
+    );
+
+    if (userRows.rowCount === 0) {
+      return res.status(403).json({ success: false, message: "Only pharmacy accounts can update stock" });
+    }
+
+    if (!userRows.rows[0].pharmacy_verified) {
+      return res.status(403).json({
+        success: false,
+        message: "Pharmacy account is pending admin verification",
+      });
+    }
+
     const pharmacyRows = await pool.query("SELECT id FROM pharmacies WHERE user_id = $1", [userId]);
 
     if (pharmacyRows.rowCount === 0) {
