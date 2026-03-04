@@ -227,6 +227,27 @@ select {
   gap: 10px;
 }
 
+.stock-toolbar {
+  display: grid;
+  gap: 10px;
+  margin: 8px 0 12px;
+}
+
+.stock-count {
+  margin: 0;
+}
+
+.stock-filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.stock-filters input {
+  min-width: 220px;
+  flex: 1;
+}
+
 .list-item {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -351,6 +372,10 @@ select {
   }
 
   .search-filters input {
+    min-width: 100%;
+  }
+
+  .stock-filters input {
     min-width: 100%;
   }
 
