@@ -39,7 +39,6 @@ function RegisterPage() {
         <select name="role" onChange={handleChange} value={form.role}>
           <option value="user">User</option>
           <option value="pharmacy">Pharmacy</option>
-          <option value="admin">Admin</option>
         </select>
         <button className="btn" type="submit">
           Register

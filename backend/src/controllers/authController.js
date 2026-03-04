@@ -2,18 +2,21 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
 
-const allowedRoles = ["user", "pharmacy", "admin"];
+const allowedRoles = ["user", "pharmacy"];
 
 exports.register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
-    if (!name || !email || !password || !role) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+    if (!name || !email || !password) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Name, email, and password are required" });
     }
 
-    if (!allowedRoles.includes(role)) {
-      return res.status(400).json({ success: false, message: "Invalid role" });
+    const safeRole = role || "user";
+    if (!allowedRoles.includes(safeRole)) {
+      return res.status(400).json({ success: false, message: "Only user or pharmacy role is allowed" });
     }
 
     const existingUsers = await pool.query("SELECT id FROM users WHERE email = $1", [email]);
@@ -24,7 +27,7 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
       "INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id",
-      [name, email, hashedPassword, role]
+      [name, email, hashedPassword, safeRole]
     );
 
     return res.status(201).json({
