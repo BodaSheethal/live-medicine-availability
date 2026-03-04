@@ -21,8 +21,11 @@ function PharmacySearchStockPage() {
   }, []);
 
   const filteredRows = useMemo(() => {
+    const query = search.toLowerCase().trim();
+    if (!query) return [];
+
     return rows.filter((item) => {
-      const matchesName = item.medicine_name.toLowerCase().includes(search.toLowerCase().trim());
+      const matchesName = item.medicine_name.toLowerCase().includes(query);
       if (stockFilter === "in") return matchesName && item.available;
       if (stockFilter === "out") return matchesName && !item.available;
       return matchesName;
@@ -45,22 +48,28 @@ function PharmacySearchStockPage() {
         </select>
       </div>
 
-      <p className="stock-count">
-        Results: <strong>{filteredRows.length}</strong>
-      </p>
+      {!!search.trim() && (
+        <p className="stock-count">
+          Results: <strong>{filteredRows.length}</strong>
+        </p>
+      )}
 
-      <div className="list">
-        {filteredRows.map((item) => (
-          <div className="list-item" key={item.medicine_id}>
-            <h3>{item.medicine_name}</h3>
-            <p>Stock: {item.stock}</p>
-            <p>Price: Rs. {Number(item.price).toFixed(2)}</p>
-            <p className={item.available ? "in-stock" : "out-stock"}>
-              {item.available ? "Available" : "Out of stock"}
-            </p>
-          </div>
-        ))}
-      </div>
+      {!search.trim() ? (
+        <p>Enter a medicine name to view stock.</p>
+      ) : (
+        <div className="list">
+          {filteredRows.map((item) => (
+            <div className="list-item" key={item.medicine_id}>
+              <h3>{item.medicine_name}</h3>
+              <p>Stock: {item.stock}</p>
+              <p>Price: Rs. {Number(item.price).toFixed(2)}</p>
+              <p className={item.available ? "in-stock" : "out-stock"}>
+                {item.available ? "Available" : "Out of stock"}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {message && <p className="message">{message}</p>}
     </div>
