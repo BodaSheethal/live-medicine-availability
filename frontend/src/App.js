@@ -84,6 +84,14 @@ function App() {
             }
           />
           <Route
+            path="/pharmacy-search-stock"
+            element={
+              <PharmacyRoute>
+                <PharmacyStockPage />
+              </PharmacyRoute>
+            }
+          />
+          <Route
             path="/pharmacy-add-stock"
             element={
               <PharmacyRoute>
