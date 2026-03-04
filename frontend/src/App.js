@@ -8,6 +8,7 @@ import EmergencyModePage from "./pages/EmergencyModePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import AdminDataPage from "./pages/AdminDataPage";
+import PharmacyStockPage from "./pages/PharmacyStockPage";
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -20,6 +21,15 @@ function AdminRoute({ children }) {
 
   if (!token) return <Navigate to="/login" replace />;
   if (user.role !== "admin") return <Navigate to="/" replace />;
+  return children;
+}
+
+function PharmacyRoute({ children }) {
+  const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  if (!token) return <Navigate to="/login" replace />;
+  if (user.role !== "pharmacy") return <Navigate to="/" replace />;
   return children;
 }
 
@@ -62,6 +72,14 @@ function App() {
               <AdminRoute>
                 <AdminDataPage />
               </AdminRoute>
+            }
+          />
+          <Route
+            path="/pharmacy-stock"
+            element={
+              <PharmacyRoute>
+                <PharmacyStockPage />
+              </PharmacyRoute>
             }
           />
           <Route path="/login" element={token ? <Navigate to="/" replace /> : <LoginPage />} />

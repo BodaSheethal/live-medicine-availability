@@ -5,6 +5,7 @@ const {
   getUsers,
   getMedicines,
   getPharmacies,
+  getPharmacyFullDetails,
   verifyPharmacy,
 } = require("../controllers/adminController");
 
@@ -15,6 +16,7 @@ router.use(authenticate, authorizeRoles("admin"));
 router.get("/users", getUsers);
 router.get("/medicines", getMedicines);
 router.get("/pharmacies", getPharmacies);
+router.get("/pharmacy-full-details", getPharmacyFullDetails);
 router.post("/verify-pharmacy", verifyPharmacy);
 
 module.exports = router;

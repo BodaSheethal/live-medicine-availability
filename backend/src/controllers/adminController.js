@@ -88,3 +88,37 @@ exports.getPharmacies = async (req, res) => {
     return res.status(500).json({ success: false, message: "Could not fetch pharmacies" });
   }
 };
+
+exports.getPharmacyFullDetails = async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT
+         p.id AS pharmacy_id,
+         p.name AS pharmacy_name,
+         p.latitude,
+         p.longitude,
+         p.open_24x7,
+         u.id AS owner_user_id,
+         u.name AS owner_name,
+         u.email AS owner_email,
+         u.pharmacy_verified,
+         u.pharmacy_license_no,
+         u.pharmacy_store_name,
+         m.id AS medicine_id,
+         m.name AS medicine_name,
+         m.category,
+         pm.stock,
+         pm.price
+       FROM pharmacies p
+       LEFT JOIN users u ON u.id = p.user_id
+       LEFT JOIN pharmacy_medicines pm ON pm.pharmacy_id = p.id
+       LEFT JOIN medicines m ON m.id = pm.medicine_id
+       ORDER BY p.id DESC, m.name ASC`
+    );
+
+    return res.json({ success: true, count: result.rowCount, data: result.rows });
+  } catch (error) {
+    console.error("getPharmacyFullDetails error", error);
+    return res.status(500).json({ success: false, message: "Could not fetch full pharmacy details" });
+  }
+};

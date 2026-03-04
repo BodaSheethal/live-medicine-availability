@@ -5,19 +5,22 @@ function AdminDataPage() {
   const [users, setUsers] = useState([]);
   const [medicines, setMedicines] = useState([]);
   const [pharmacies, setPharmacies] = useState([]);
+  const [pharmacyFullDetails, setPharmacyFullDetails] = useState([]);
   const [message, setMessage] = useState("Loading admin data...");
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [usersRes, medicinesRes, pharmaciesRes] = await Promise.all([
+        const [usersRes, medicinesRes, pharmaciesRes, fullRes] = await Promise.all([
           api.get("/admin/users"),
           api.get("/admin/medicines"),
           api.get("/admin/pharmacies"),
+          api.get("/admin/pharmacy-full-details"),
         ]);
         setUsers(usersRes.data.data || []);
         setMedicines(medicinesRes.data.data || []);
         setPharmacies(pharmaciesRes.data.data || []);
+        setPharmacyFullDetails(fullRes.data.data || []);
         setMessage("");
       } catch (error) {
         setMessage(error.response?.data?.message || "Failed to load admin data");
@@ -97,6 +100,38 @@ function AdminDataPage() {
                 <td>{p.name}</td>
                 <td>{p.open_24x7 ? "Yes" : "No"}</td>
                 <td>{p.owner_email || "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Pharmacy Full Details (with Medicines)</h3>
+      <div className="table-wrap">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Pharmacy</th>
+              <th>Owner</th>
+              <th>Verified</th>
+              <th>License</th>
+              <th>Medicine</th>
+              <th>Category</th>
+              <th>Stock</th>
+              <th>Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            {pharmacyFullDetails.map((p, idx) => (
+              <tr key={`${p.pharmacy_id}-${p.medicine_id || "na"}-${idx}`}>
+                <td>{p.pharmacy_name}</td>
+                <td>{p.owner_email || "-"}</td>
+                <td>{p.pharmacy_verified ? "Yes" : "No"}</td>
+                <td>{p.pharmacy_license_no || "-"}</td>
+                <td>{p.medicine_name || "-"}</td>
+                <td>{p.category || "-"}</td>
+                <td>{p.stock ?? "-"}</td>
+                <td>{p.price ?? "-"}</td>
               </tr>
             ))}
           </tbody>
