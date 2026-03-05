@@ -74,6 +74,12 @@ body {
   margin: 2px 0;
 }
 
+.notify-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .container {
   max-width: 900px;
   margin: 24px auto;
@@ -190,6 +196,10 @@ select {
 
 .btn.secondary {
   background: #198754;
+}
+
+.btn.danger {
+  background: #dc3545;
 }
 
 .actions {

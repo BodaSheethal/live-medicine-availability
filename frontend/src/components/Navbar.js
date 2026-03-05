@@ -36,6 +36,16 @@ function Navbar() {
     }
   };
 
+  const denyPharmacy = async (userId) => {
+    try {
+      await api.post("/admin/verify-pharmacy", { userId, approved: false });
+      setNotificationMessage("Pharmacy verification request denied.");
+      await loadPendingPharmacies();
+    } catch (error) {
+      setNotificationMessage(error.response?.data?.message || "Could not deny pharmacy");
+    }
+  };
+
   useEffect(() => {
     if (!isAdmin) return;
     loadPendingPharmacies();
@@ -104,9 +114,14 @@ function Navbar() {
                   <p>Email: {request.email}</p>
                   <p>License: {request.pharmacy_license_no || "-"}</p>
                 </div>
-                <button className="btn secondary" onClick={() => approvePharmacy(request.id)}>
-                  Verify
-                </button>
+                <div className="notify-actions">
+                  <button className="btn secondary" onClick={() => approvePharmacy(request.id)}>
+                    Verify
+                  </button>
+                  <button className="btn danger" onClick={() => denyPharmacy(request.id)}>
+                    Deny
+                  </button>
+                </div>
               </div>
             ))
           )}
