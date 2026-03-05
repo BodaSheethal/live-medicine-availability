@@ -6,9 +6,6 @@ function AdminDataPage() {
   const [medicines, setMedicines] = useState([]);
   const [pharmacies, setPharmacies] = useState([]);
   const [pharmacyFullDetails, setPharmacyFullDetails] = useState([]);
-  const [medicineQuery, setMedicineQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchMessage, setSearchMessage] = useState("");
   const [message, setMessage] = useState("Loading admin data...");
 
   useEffect(() => {
@@ -33,71 +30,11 @@ function AdminDataPage() {
     loadData();
   }, []);
 
-  const handleMedicineSearch = async (e) => {
-    e.preventDefault();
-    setSearchMessage("");
-    setSearchResults([]);
-
-    if (!medicineQuery.trim()) {
-      setSearchMessage("Enter medicine name");
-      return;
-    }
-
-    try {
-      const { data } = await api.get(
-        `/medicine/search-medicine?name=${encodeURIComponent(medicineQuery.trim())}`
-      );
-      setSearchResults(data.data || []);
-      if (!data.data?.length) {
-        setSearchMessage("No pharmacy has this medicine in dataset.");
-      }
-    } catch (error) {
-      setSearchMessage(error.response?.data?.message || "Could not search medicine");
-    }
-  };
-
   return (
     <div className="card">
       <h2>Admin Data Viewer</h2>
       <p>Only admin users can access this page.</p>
       {message && <p className="message">{message}</p>}
-
-      <h3>Medicine Availability Search (Pharmacy-wise)</h3>
-      <form className="form inline" onSubmit={handleMedicineSearch}>
-        <input
-          placeholder="Enter medicine name"
-          value={medicineQuery}
-          onChange={(e) => setMedicineQuery(e.target.value)}
-        />
-        <button className="btn" type="submit">
-          Search
-        </button>
-      </form>
-      {searchMessage && <p className="message">{searchMessage}</p>}
-      <div className="table-wrap">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Medicine</th>
-              <th>Pharmacy</th>
-              <th>Stock</th>
-              <th>Price</th>
-              <th>Distance (km)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {searchResults.map((item, idx) => (
-              <tr key={`${item.medicine_id}-${item.pharmacy_name}-${idx}`}>
-                <td>{item.medicine_name}</td>
-                <td>{item.pharmacy_name}</td>
-                <td>{item.stock}</td>
-                <td>{item.price}</td>
-                <td>{item.distance_km}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
 
       <h3>Users</h3>
       <div className="table-wrap">
