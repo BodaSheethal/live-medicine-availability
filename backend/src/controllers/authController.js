@@ -41,8 +41,8 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
       `INSERT INTO users
-       (name, email, password, role, pharmacy_verified, pharmacy_license_no, pharmacy_store_name)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       (name, email, password, role, pharmacy_verified, pharmacy_verification_status, pharmacy_license_no, pharmacy_store_name)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        RETURNING id`,
       [
         name,
@@ -50,6 +50,7 @@ exports.register = async (req, res) => {
         hashedPassword,
         safeRole,
         safeRole === "pharmacy" ? false : true,
+        safeRole === "pharmacy" ? "pending" : "approved",
         safeRole === "pharmacy" ? pharmacyLicenseNo : null,
         safeRole === "pharmacy" ? pharmacyStoreName : null,
       ]
@@ -78,7 +79,7 @@ exports.login = async (req, res) => {
     }
 
     const users = await pool.query(
-      `SELECT id, name, email, password, role, pharmacy_verified
+      `SELECT id, name, email, password, role, pharmacy_verified, pharmacy_verification_status
        FROM users
        WHERE email = $1`,
       [email]
@@ -94,7 +95,14 @@ exports.login = async (req, res) => {
       return res.status(401).json({ success: false, message: "Invalid credentials" });
     }
 
-    if (user.role === "pharmacy" && !user.pharmacy_verified) {
+    if (user.role === "pharmacy" && user.pharmacy_verification_status === "denied") {
+      return res.status(403).json({
+        success: false,
+        message: "Pharmacy account verification request was denied by admin",
+      });
+    }
+
+    if (user.role === "pharmacy" && user.pharmacy_verification_status !== "approved") {
       return res.status(403).json({
         success: false,
         message: "Pharmacy account pending admin verification",
@@ -117,6 +125,7 @@ exports.login = async (req, res) => {
         email: user.email,
         role: user.role,
         pharmacyVerified: user.pharmacy_verified,
+        pharmacyVerificationStatus: user.pharmacy_verification_status,
       },
     });
   } catch (error) {

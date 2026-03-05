@@ -30,6 +30,10 @@ function AdminDataPage() {
     loadData();
   }, []);
 
+  const deniedPharmacies = users.filter(
+    (u) => u.role === "pharmacy" && u.pharmacy_verification_status === "denied"
+  );
+
   return (
     <div className="card">
       <h2>Admin Data Viewer</h2>
@@ -45,6 +49,7 @@ function AdminDataPage() {
               <th>Name</th>
               <th>Email</th>
               <th>Role</th>
+              <th>Pharmacy Status</th>
             </tr>
           </thead>
           <tbody>
@@ -54,6 +59,33 @@ function AdminDataPage() {
                 <td>{u.name}</td>
                 <td>{u.email}</td>
                 <td>{u.role}</td>
+                <td>{u.role === "pharmacy" ? u.pharmacy_verification_status : "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Denied Pharmacy Accounts</h3>
+      <div className="table-wrap">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Store Name</th>
+              <th>Email</th>
+              <th>License</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {deniedPharmacies.map((u) => (
+              <tr key={`denied-${u.id}`}>
+                <td>{u.id}</td>
+                <td>{u.pharmacy_store_name || u.name}</td>
+                <td>{u.email}</td>
+                <td>{u.pharmacy_license_no || "-"}</td>
+                <td>{u.pharmacy_verification_status}</td>
               </tr>
             ))}
           </tbody>
@@ -114,6 +146,7 @@ function AdminDataPage() {
               <th>Pharmacy</th>
               <th>Owner</th>
               <th>Verified</th>
+              <th>Status</th>
               <th>License</th>
               <th>Medicine</th>
               <th>Category</th>
@@ -127,6 +160,7 @@ function AdminDataPage() {
                 <td>{p.pharmacy_name}</td>
                 <td>{p.owner_email || "-"}</td>
                 <td>{p.pharmacy_verified ? "Yes" : "No"}</td>
+                <td>{p.pharmacy_verification_status || "-"}</td>
                 <td>{p.pharmacy_license_no || "-"}</td>
                 <td>{p.medicine_name || "-"}</td>
                 <td>{p.category || "-"}</td>

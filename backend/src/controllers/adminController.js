@@ -9,6 +9,7 @@ exports.getUsers = async (req, res) => {
          email,
          role,
          pharmacy_verified,
+         pharmacy_verification_status,
          pharmacy_license_no,
          pharmacy_store_name,
          created_at
@@ -43,14 +44,15 @@ exports.verifyPharmacy = async (req, res) => {
       return res.status(400).json({ success: false, message: "Only pharmacy users can be verified" });
     }
 
+    const nextStatus = approved ? "approved" : "denied";
     await pool.query(
-      "UPDATE users SET pharmacy_verified = $1 WHERE id = $2",
-      [Boolean(approved), userId]
+      "UPDATE users SET pharmacy_verified = $1, pharmacy_verification_status = $2 WHERE id = $3",
+      [Boolean(approved), nextStatus, userId]
     );
 
     return res.json({
       success: true,
-      message: approved ? "Pharmacy verified successfully" : "Pharmacy verification removed",
+      message: approved ? "Pharmacy verified successfully" : "Pharmacy verification denied",
     });
   } catch (error) {
     console.error("verifyPharmacy error", error);
@@ -102,6 +104,7 @@ exports.getPharmacyFullDetails = async (req, res) => {
          u.name AS owner_name,
          u.email AS owner_email,
          u.pharmacy_verified,
+         u.pharmacy_verification_status,
          u.pharmacy_license_no,
          u.pharmacy_store_name,
          m.id AS medicine_id,

@@ -7,7 +7,7 @@ const parseNumber = (value, fallback) => {
 
 const ensureVerifiedPharmacyUser = async (userId) => {
   const userRows = await pool.query(
-    `SELECT id, name, pharmacy_store_name, pharmacy_verified
+    `SELECT id, name, pharmacy_store_name, pharmacy_verified, pharmacy_verification_status
      FROM users
      WHERE id = $1 AND role = 'pharmacy'`,
     [userId]
@@ -17,7 +17,11 @@ const ensureVerifiedPharmacyUser = async (userId) => {
     return { ok: false, status: 403, message: "Only pharmacy accounts can perform this action" };
   }
 
-  if (!userRows.rows[0].pharmacy_verified) {
+  if (userRows.rows[0].pharmacy_verification_status === "denied") {
+    return { ok: false, status: 403, message: "Pharmacy account verification was denied by admin" };
+  }
+
+  if (userRows.rows[0].pharmacy_verification_status !== "approved") {
     return { ok: false, status: 403, message: "Pharmacy account is pending admin verification" };
   }
 

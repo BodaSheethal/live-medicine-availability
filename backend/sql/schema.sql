@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
   password VARCHAR(255) NOT NULL,
   role VARCHAR(20) NOT NULL CHECK (role IN ('user', 'pharmacy', 'admin')),
   pharmacy_verified BOOLEAN NOT NULL DEFAULT FALSE,
+  pharmacy_verification_status VARCHAR(20) NOT NULL DEFAULT 'pending',
   pharmacy_license_no VARCHAR(100),
   pharmacy_store_name VARCHAR(150),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -13,9 +14,21 @@ CREATE TABLE IF NOT EXISTS users (
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS pharmacy_verified BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS pharmacy_verification_status VARCHAR(20) NOT NULL DEFAULT 'pending';
+ALTER TABLE users
   ADD COLUMN IF NOT EXISTS pharmacy_license_no VARCHAR(100);
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS pharmacy_store_name VARCHAR(150);
+
+UPDATE users
+SET pharmacy_verification_status = CASE
+  WHEN role IN ('user', 'admin') THEN 'approved'
+  WHEN role = 'pharmacy' AND pharmacy_verified = TRUE THEN 'approved'
+  WHEN role = 'pharmacy' AND pharmacy_verified = FALSE THEN 'pending'
+  ELSE 'pending'
+END
+WHERE pharmacy_verification_status IS NULL
+   OR pharmacy_verification_status NOT IN ('pending', 'approved', 'denied');
 
 CREATE TABLE IF NOT EXISTS medicines (
   id SERIAL PRIMARY KEY,
@@ -57,6 +70,7 @@ ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name;
 
 UPDATE users
 SET pharmacy_verified = TRUE,
+    pharmacy_verification_status = 'approved',
     pharmacy_store_name = COALESCE(pharmacy_store_name, name)
 WHERE role = 'pharmacy';
 

@@ -16,7 +16,7 @@ function Navbar() {
     try {
       const { data } = await api.get("/admin/users");
       const pending = (data.data || []).filter(
-        (u) => u.role === "pharmacy" && !u.pharmacy_verified
+        (u) => u.role === "pharmacy" && u.pharmacy_verification_status === "pending"
       );
       setPendingPharmacies(pending);
     } catch (error) {
