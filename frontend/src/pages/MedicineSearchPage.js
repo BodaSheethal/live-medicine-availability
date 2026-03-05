@@ -2,6 +2,8 @@ import React, { useMemo, useState } from "react";
 import api from "../api/axios";
 
 function MedicineSearchPage() {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const isAdmin = user.role === "admin";
   const [name, setName] = useState("");
   const [rows, setRows] = useState([]);
   const [message, setMessage] = useState("");
@@ -10,6 +12,19 @@ function MedicineSearchPage() {
   const searchMedicine = async (e) => {
     e.preventDefault();
     setMessage("");
+
+    if (isAdmin) {
+      try {
+        const { data } = await api.get("/medicine/search-medicine", {
+          params: { name },
+        });
+        setRows(data.data || []);
+        if ((data.data || []).length === 0) setMessage("No pharmacy has this medicine in dataset.");
+      } catch (error) {
+        setMessage(error.response?.data?.message || "Search failed");
+      }
+      return;
+    }
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -48,9 +63,15 @@ function MedicineSearchPage() {
   return (
     <div className="search-page">
       <div className="search-header">
-        <p className="home-tag">Smart Medicine Search</p>
-        <h2>Find Medicine Availability Nearby</h2>
-        <p>Search by medicine name and filter by price, distance, and stock availability.</p>
+        <p className="home-tag">{isAdmin ? "Admin Medicine Search" : "Smart Medicine Search"}</p>
+        <h2>
+          {isAdmin ? "Find Which Pharmacy Has the Medicine" : "Find Medicine Availability Nearby"}
+        </h2>
+        <p>
+          {isAdmin
+            ? "Enter medicine name to see all pharmacies where it is available, with stock and price."
+            : "Search by medicine name and filter by price, distance, and stock availability."}
+        </p>
       </div>
 
       <div className="card search-card">
@@ -66,47 +87,78 @@ function MedicineSearchPage() {
           </button>
         </form>
 
-        <div className="filters search-filters">
-          <input
-            placeholder="Max Price"
-            type="number"
-            value={filters.maxPrice}
-            onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
-          />
-          <input
-            placeholder="Max Distance (km)"
-            type="number"
-            value={filters.maxDistance}
-            onChange={(e) => setFilters({ ...filters, maxDistance: e.target.value })}
-          />
-          <label className="availability-toggle">
+        {!isAdmin && (
+          <div className="filters search-filters">
             <input
-              type="checkbox"
-              checked={filters.onlyAvailable}
-              onChange={(e) => setFilters({ ...filters, onlyAvailable: e.target.checked })}
+              placeholder="Max Price"
+              type="number"
+              value={filters.maxPrice}
+              onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value })}
             />
-            In Stock Only
-          </label>
-        </div>
+            <input
+              placeholder="Max Distance (km)"
+              type="number"
+              value={filters.maxDistance}
+              onChange={(e) => setFilters({ ...filters, maxDistance: e.target.value })}
+            />
+            <label className="availability-toggle">
+              <input
+                type="checkbox"
+                checked={filters.onlyAvailable}
+                onChange={(e) => setFilters({ ...filters, onlyAvailable: e.target.checked })}
+              />
+              In Stock Only
+            </label>
+          </div>
+        )}
 
         {message && <p className="message">{message}</p>}
 
-        <div className="list result-grid">
-          {filteredRows.map((item, idx) => (
-            <div key={`${item.medicine_id}-${idx}`} className="list-item result-card">
-              <h3>{item.medicine_name}</h3>
-              <p>Pharmacy: {item.pharmacy_name}</p>
-              <p>Price: Rs. {Number(item.price).toFixed(2)}</p>
-              <p>Distance: {item.distance_km} km</p>
-              <p className={Number(item.stock) > 0 ? "in-stock" : "out-stock"}>
-                Stock: {item.stock > 0 ? `${item.stock} available` : "Out of stock"}
-              </p>
-              {Number(item.stock) > 0 && (
-                <p className="notification">Available now. You can visit this pharmacy.</p>
-              )}
-            </div>
-          ))}
-        </div>
+        {isAdmin ? (
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Medicine</th>
+                  <th>Pharmacy</th>
+                  <th>Stock</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredRows.map((item, idx) => (
+                  <tr key={`${item.medicine_id}-${item.pharmacy_name}-${idx}`}>
+                    <td>{item.medicine_name}</td>
+                    <td>{item.pharmacy_name}</td>
+                    <td>{item.stock}</td>
+                    <td>Rs. {Number(item.price).toFixed(2)}</td>
+                    <td className={Number(item.stock) > 0 ? "in-stock" : "out-stock"}>
+                      {Number(item.stock) > 0 ? "Available" : "Out of stock"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="list result-grid">
+            {filteredRows.map((item, idx) => (
+              <div key={`${item.medicine_id}-${idx}`} className="list-item result-card">
+                <h3>{item.medicine_name}</h3>
+                <p>Pharmacy: {item.pharmacy_name}</p>
+                <p>Price: Rs. {Number(item.price).toFixed(2)}</p>
+                <p>Distance: {item.distance_km} km</p>
+                <p className={Number(item.stock) > 0 ? "in-stock" : "out-stock"}>
+                  Stock: {item.stock > 0 ? `${item.stock} available` : "Out of stock"}
+                </p>
+                {Number(item.stock) > 0 && (
+                  <p className="notification">Available now. You can visit this pharmacy.</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
