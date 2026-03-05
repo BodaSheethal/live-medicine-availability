@@ -1,10 +1,47 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import api from "../api/axios";
 
 function Navbar() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const isAdmin = Boolean(token) && user.role === "admin";
+  const [pendingPharmacies, setPendingPharmacies] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState("");
+
+  const loadPendingPharmacies = async () => {
+    if (!isAdmin) return;
+    try {
+      const { data } = await api.get("/admin/users");
+      const pending = (data.data || []).filter(
+        (u) => u.role === "pharmacy" && !u.pharmacy_verified
+      );
+      setPendingPharmacies(pending);
+    } catch (error) {
+      setNotificationMessage(
+        error.response?.data?.message || "Could not load pharmacy verification requests"
+      );
+    }
+  };
+
+  const approvePharmacy = async (userId) => {
+    try {
+      await api.post("/admin/verify-pharmacy", { userId, approved: true });
+      setNotificationMessage("Pharmacy verified successfully.");
+      await loadPendingPharmacies();
+    } catch (error) {
+      setNotificationMessage(error.response?.data?.message || "Could not verify pharmacy");
+    }
+  };
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    loadPendingPharmacies();
+    const interval = setInterval(loadPendingPharmacies, 30000);
+    return () => clearInterval(interval);
+  }, [isAdmin]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -38,12 +75,44 @@ function Navbar() {
               </>
             )}
             {user.role === "admin" && <Link to="/admin">Admin Data</Link>}
+            {isAdmin && (
+              <button
+                type="button"
+                className="link-btn notify-btn"
+                onClick={() => setShowNotifications((prev) => !prev)}
+              >
+                Notifications ({pendingPharmacies.length})
+              </button>
+            )}
             <button type="button" onClick={handleLogout} className="link-btn">
               Logout
             </button>
           </>
         )}
       </div>
+
+      {isAdmin && showNotifications && (
+        <div className="notify-panel">
+          <h4>Pharmacy Verification Requests</h4>
+          {pendingPharmacies.length === 0 ? (
+            <p>No pending pharmacy requests.</p>
+          ) : (
+            pendingPharmacies.map((request) => (
+              <div className="notify-item" key={request.id}>
+                <div>
+                  <strong>{request.pharmacy_store_name || request.name}</strong>
+                  <p>Email: {request.email}</p>
+                  <p>License: {request.pharmacy_license_no || "-"}</p>
+                </div>
+                <button className="btn secondary" onClick={() => approvePharmacy(request.id)}>
+                  Verify
+                </button>
+              </div>
+            ))
+          )}
+          {notificationMessage && <p className="message">{notificationMessage}</p>}
+        </div>
+      )}
     </nav>
   );
 }

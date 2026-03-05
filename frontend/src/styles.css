@@ -39,6 +39,41 @@ body {
   font-size: 14px;
 }
 
+.notify-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+.notify-panel {
+  margin-top: 12px;
+  width: 100%;
+  background: #ffffff;
+  color: #222;
+  border-radius: 10px;
+  border: 1px solid #dbe3ee;
+  padding: 12px;
+}
+
+.notify-panel h4 {
+  margin: 0 0 8px;
+}
+
+.notify-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.notify-item p {
+  margin: 2px 0;
+}
+
 .container {
   max-width: 900px;
   margin: 24px auto;
@@ -366,6 +401,11 @@ select {
 
   .nav-links {
     gap: 8px 10px;
+  }
+
+  .notify-item {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   input,
