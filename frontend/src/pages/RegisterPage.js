@@ -21,6 +21,12 @@ function RegisterPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage("");
+
+    if (form.password.length < 8) {
+      setMessage("Password must be at least 8 characters");
+      return;
+    }
+
     try {
       await api.post("/auth/register", form);
       setMessage("Registration successful. Please login.");
@@ -39,7 +45,8 @@ function RegisterPage() {
         <input
           name="password"
           type="password"
-          placeholder="Password"
+          placeholder="Password (min 8 characters)"
+          minLength={8}
           onChange={handleChange}
           required
         />
