@@ -353,6 +353,12 @@ select {
   border-radius: 6px;
 }
 
+.muted {
+  margin: 8px 0 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
 .in-stock {
   color: #146c43;
   font-weight: 600;

@@ -5,6 +5,14 @@ function NearbyPharmacyPage() {
   const [rows, setRows] = useState([]);
   const [message, setMessage] = useState("");
 
+  const mapsLink = (lat, lng) => {
+    const la = Number(lat);
+    const lo = Number(lng);
+    if (!Number.isFinite(la) || !Number.isFinite(lo)) return null;
+    if (la === 0 && lo === 0) return null;
+    return `https://www.google.com/maps?q=${encodeURIComponent(`${la},${lo}`)}`;
+  };
+
   const loadNearby = () => {
     setMessage("");
     navigator.geolocation.getCurrentPosition(
@@ -45,6 +53,17 @@ function NearbyPharmacyPage() {
             <h3>{item.name}</h3>
             <p>Distance: {item.distance_km} km</p>
             <p>{item.open_24x7 ? "Open 24/7" : "Limited hours"}</p>
+            {mapsLink(item.latitude, item.longitude) && (
+              <p>
+                <a
+                  href={mapsLink(item.latitude, item.longitude)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  View on map
+                </a>
+              </p>
+            )}
           </div>
         ))}
       </div>

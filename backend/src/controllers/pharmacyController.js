@@ -5,6 +5,30 @@ const parseNumber = (value, fallback) => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+const ensurePharmacyAccountNotDenied = async (userId) => {
+  const userRows = await pool.query(
+    `SELECT id, name, role, pharmacy_store_name, pharmacy_verified, pharmacy_verification_status
+     FROM users
+     WHERE id = $1`,
+    [userId]
+  );
+
+  if (userRows.rowCount === 0) {
+    return { ok: false, status: 401, message: "Unauthorized" };
+  }
+
+  const user = userRows.rows[0];
+  if (user.role !== "pharmacy") {
+    return { ok: false, status: 403, message: "Only pharmacy accounts can perform this action" };
+  }
+
+  if (user.pharmacy_verification_status === "denied") {
+    return { ok: false, status: 403, message: "Pharmacy account verification was denied by admin" };
+  }
+
+  return { ok: true, user };
+};
+
 const ensureVerifiedPharmacyUser = async (userId) => {
   const userRows = await pool.query(
     `SELECT id, name, pharmacy_store_name, pharmacy_verified, pharmacy_verification_status
@@ -42,6 +66,93 @@ const ensurePharmacyProfile = async (userId, fallbackName) => {
     [userId, profileName, 0, 0, false]
   );
   return created.rows[0].id;
+};
+
+exports.getMyProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const access = await ensurePharmacyAccountNotDenied(userId);
+    if (!access.ok) {
+      return res.status(access.status).json({ success: false, message: access.message });
+    }
+
+    // Ensure a profile exists so the pharmacy can immediately save location.
+    const pharmacyId = await ensurePharmacyProfile(
+      userId,
+      access.user.pharmacy_store_name || access.user.name
+    );
+
+    const profileRows = await pool.query(
+      `SELECT id, name, latitude, longitude, open_24x7
+       FROM pharmacies
+       WHERE id = $1`,
+      [pharmacyId]
+    );
+
+    return res.json({
+      success: true,
+      user: {
+        id: access.user.id,
+        name: access.user.name,
+        pharmacyStoreName: access.user.pharmacy_store_name,
+        pharmacyVerified: access.user.pharmacy_verified,
+        pharmacyVerificationStatus: access.user.pharmacy_verification_status,
+      },
+      pharmacy: profileRows.rows[0],
+    });
+  } catch (error) {
+    console.error("getMyProfile error", error);
+    return res.status(500).json({ success: false, message: "Could not load pharmacy profile" });
+  }
+};
+
+exports.updateMyProfile = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { latitude, longitude, open_24x7 } = req.body;
+
+    const access = await ensurePharmacyAccountNotDenied(userId);
+    if (!access.ok) {
+      return res.status(access.status).json({ success: false, message: access.message });
+    }
+
+    const lat = parseNumber(latitude, NaN);
+    const lng = parseNumber(longitude, NaN);
+
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+      return res.status(400).json({
+        success: false,
+        message: "latitude and longitude must be valid numbers",
+      });
+    }
+
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      return res.status(400).json({
+        success: false,
+        message: "latitude must be -90..90 and longitude must be -180..180",
+      });
+    }
+
+    const pharmacyId = await ensurePharmacyProfile(
+      userId,
+      access.user.pharmacy_store_name || access.user.name
+    );
+
+    await pool.query(
+      `UPDATE pharmacies
+       SET latitude = $1,
+           longitude = $2,
+           open_24x7 = $3
+       WHERE id = $4`,
+      [lat, lng, Boolean(open_24x7), pharmacyId]
+    );
+
+    return res.json({ success: true, message: "Pharmacy location updated successfully" });
+  } catch (error) {
+    console.error("updateMyProfile error", error);
+    return res.status(500).json({ success: false, message: "Could not update pharmacy profile" });
+  }
 };
 
 exports.nearbyPharmacies = async (req, res) => {

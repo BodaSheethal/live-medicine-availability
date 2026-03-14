@@ -23,6 +23,8 @@ exports.searchMedicine = async (req, res) => {
         pm.price,
         p.name AS pharmacy_name,
         p.open_24x7,
+        p.latitude,
+        p.longitude,
         ROUND((
           6371 * ACOS(
             COS(RADIANS($1)) * COS(RADIANS(p.latitude)) * COS(RADIANS(p.longitude) - RADIANS($2)) +

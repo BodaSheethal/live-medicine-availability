@@ -60,6 +60,16 @@ function MedicineSearchPage() {
     });
   }, [rows, filters]);
 
+  const mapsLink = (lat, lng) => {
+    if (lat === undefined || lng === undefined || lat === null || lng === null) return null;
+    const la = Number(lat);
+    const lo = Number(lng);
+    if (!Number.isFinite(la) || !Number.isFinite(lo)) return null;
+    if (la === 0 && lo === 0) return null;
+    // Google Maps supports simple query as lat,lng
+    return `https://www.google.com/maps?q=${encodeURIComponent(`${la},${lo}`)}`;
+  };
+
   return (
     <div className="search-page">
       <div className="search-header">
@@ -124,6 +134,7 @@ function MedicineSearchPage() {
                   <th>Stock</th>
                   <th>Price</th>
                   <th>Status</th>
+                  <th>Map</th>
                 </tr>
               </thead>
               <tbody>
@@ -135,6 +146,15 @@ function MedicineSearchPage() {
                     <td>Rs. {Number(item.price).toFixed(2)}</td>
                     <td className={Number(item.stock) > 0 ? "in-stock" : "out-stock"}>
                       {Number(item.stock) > 0 ? "Available" : "Out of stock"}
+                    </td>
+                    <td>
+                      {mapsLink(item.latitude, item.longitude) ? (
+                        <a href={mapsLink(item.latitude, item.longitude)} target="_blank" rel="noreferrer">
+                          View map
+                        </a>
+                      ) : (
+                        "-"
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -152,6 +172,13 @@ function MedicineSearchPage() {
                 <p className={Number(item.stock) > 0 ? "in-stock" : "out-stock"}>
                   Stock: {item.stock > 0 ? `${item.stock} available` : "Out of stock"}
                 </p>
+                {mapsLink(item.latitude, item.longitude) && (
+                  <p>
+                    <a href={mapsLink(item.latitude, item.longitude)} target="_blank" rel="noreferrer">
+                      View on map
+                    </a>
+                  </p>
+                )}
                 {Number(item.stock) > 0 && (
                   <p className="notification">Available now. You can visit this pharmacy.</p>
                 )}

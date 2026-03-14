@@ -11,6 +11,7 @@ import AdminDataPage from "./pages/AdminDataPage";
 import PharmacyStockPage from "./pages/PharmacyStockPage";
 import PharmacyAddStockPage from "./pages/PharmacyAddStockPage";
 import PharmacySearchStockPage from "./pages/PharmacySearchStockPage";
+import PharmacyProfilePage from "./pages/PharmacyProfilePage";
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -97,6 +98,14 @@ function App() {
             element={
               <PharmacyRoute>
                 <PharmacyAddStockPage />
+              </PharmacyRoute>
+            }
+          />
+          <Route
+            path="/pharmacy-profile"
+            element={
+              <PharmacyRoute>
+                <PharmacyProfilePage />
               </PharmacyRoute>
             }
           />

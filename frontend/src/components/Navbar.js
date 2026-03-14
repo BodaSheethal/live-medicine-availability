@@ -76,6 +76,7 @@ function Navbar() {
                 <Link to="/pharmacy-stock">My Stock</Link>
                 <Link to="/pharmacy-search-stock">Search Stock</Link>
                 <Link to="/pharmacy-add-stock">Add Stock</Link>
+                <Link to="/pharmacy-profile">Profile</Link>
               </>
             ) : (
               <>
