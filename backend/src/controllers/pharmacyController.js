@@ -182,10 +182,11 @@ exports.nearbyPharmacies = async (req, res) => {
         CASE
           WHEN p.latitude = 0 AND p.longitude = 0 THEN NULL
           ELSE ROUND((
-            6371 * ACOS(
-              COS(RADIANS($1)) * COS(RADIANS(p.latitude)) * COS(RADIANS(p.longitude) - RADIANS($2)) +
-              SIN(RADIANS($3)) * SIN(RADIANS(p.latitude))
-            )
+            6371 * ACOS(LEAST(1, GREATEST(-1,
+              COS(RADIANS($1::double precision)) * COS(RADIANS(p.latitude::double precision)) *
+                COS(RADIANS(p.longitude::double precision) - RADIANS($2::double precision)) +
+              SIN(RADIANS($3::double precision)) * SIN(RADIANS(p.latitude::double precision))
+            )))
           )::numeric, 2)
         END AS distance_km
       FROM pharmacies p
@@ -193,10 +194,11 @@ exports.nearbyPharmacies = async (req, res) => {
       AND (
         (p.latitude = 0 AND p.longitude = 0)
         OR (
-          6371 * ACOS(
-            COS(RADIANS($1)) * COS(RADIANS(p.latitude)) * COS(RADIANS(p.longitude) - RADIANS($2)) +
-            SIN(RADIANS($3)) * SIN(RADIANS(p.latitude))
-          )
+          6371 * ACOS(LEAST(1, GREATEST(-1,
+            COS(RADIANS($1::double precision)) * COS(RADIANS(p.latitude::double precision)) *
+              COS(RADIANS(p.longitude::double precision) - RADIANS($2::double precision)) +
+            SIN(RADIANS($3::double precision)) * SIN(RADIANS(p.latitude::double precision))
+          )))
         ) <= $${maxDistanceParam}
       )
       ORDER BY (distance_km IS NULL) ASC, distance_km ASC
@@ -206,7 +208,11 @@ exports.nearbyPharmacies = async (req, res) => {
     return res.json({ success: true, count: result.rowCount, data: result.rows });
   } catch (error) {
     console.error("nearbyPharmacies error", error);
-    return res.status(500).json({ success: false, message: "Could not fetch nearby pharmacies" });
+    return res.status(500).json({
+      success: false,
+      message: "Could not fetch nearby pharmacies",
+      details: error.message,
+    });
   }
 };
 
