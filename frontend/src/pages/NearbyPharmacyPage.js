@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import api from "../api/axios";
 
 function NearbyPharmacyPage() {
@@ -16,7 +16,7 @@ function NearbyPharmacyPage() {
     return `https://www.google.com/maps?q=${encodeURIComponent(`${la},${lo}`)}`;
   };
 
-  const loadNearby = () => {
+  const loadNearby = useCallback(() => {
     setMessage("");
     setLoading(true);
     setRows([]);
@@ -56,12 +56,11 @@ function NearbyPharmacyPage() {
         }
       }
     );
-  };
+  }, []);
 
   useEffect(() => {
     loadNearby();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadNearby]);
 
   return (
     <div className="card">
