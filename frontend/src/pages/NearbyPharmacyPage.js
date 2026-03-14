@@ -51,7 +51,12 @@ function NearbyPharmacyPage() {
         {rows.map((item) => (
           <div className="list-item" key={item.id}>
             <h3>{item.name}</h3>
-            <p>Distance: {item.distance_km} km</p>
+            <p>
+              Distance:{" "}
+              {item.distance_km === null || item.distance_km === undefined
+                ? "Location not set"
+                : `${item.distance_km} km`}
+            </p>
             <p>{item.open_24x7 ? "Open 24/7" : "Limited hours"}</p>
             {mapsLink(item.latitude, item.longitude) && (
               <p>

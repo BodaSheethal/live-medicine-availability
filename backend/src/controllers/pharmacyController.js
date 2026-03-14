@@ -179,21 +179,27 @@ exports.nearbyPharmacies = async (req, res) => {
         p.open_24x7,
         p.latitude,
         p.longitude,
-        ROUND((
+        CASE
+          WHEN p.latitude = 0 AND p.longitude = 0 THEN NULL
+          ELSE ROUND((
+            6371 * ACOS(
+              COS(RADIANS($1)) * COS(RADIANS(p.latitude)) * COS(RADIANS(p.longitude) - RADIANS($2)) +
+              SIN(RADIANS($3)) * SIN(RADIANS(p.latitude))
+            )
+          )::numeric, 2)
+        END AS distance_km
+      FROM pharmacies p
+      WHERE ${filters.join(" AND ")}
+      AND (
+        (p.latitude = 0 AND p.longitude = 0)
+        OR (
           6371 * ACOS(
             COS(RADIANS($1)) * COS(RADIANS(p.latitude)) * COS(RADIANS(p.longitude) - RADIANS($2)) +
             SIN(RADIANS($3)) * SIN(RADIANS(p.latitude))
           )
-        )::numeric, 2) AS distance_km
-      FROM pharmacies p
-      WHERE ${filters.join(" AND ")}
-      AND (
-        6371 * ACOS(
-          COS(RADIANS($1)) * COS(RADIANS(p.latitude)) * COS(RADIANS(p.longitude) - RADIANS($2)) +
-          SIN(RADIANS($3)) * SIN(RADIANS(p.latitude))
-        )
-      ) <= $${maxDistanceParam}
-      ORDER BY distance_km ASC
+        ) <= $${maxDistanceParam}
+      )
+      ORDER BY (distance_km IS NULL) ASC, distance_km ASC
     `;
 
     const result = await pool.query(query, values);
