@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import api from "../api/axios";
 
 function NearbyPharmacyPage() {
   const [rows, setRows] = useState([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
-  const [maxDistance, setMaxDistance] = useState(50);
-  const [emergencyOnly, setEmergencyOnly] = useState(false);
+  // Keep a generous default so users actually see pharmacies without tweaking inputs.
+  const maxDistance = 500;
 
   const mapsLink = (lat, lng) => {
     const la = Number(lat);
@@ -28,12 +28,11 @@ function NearbyPharmacyPage() {
               lat: position.coords.latitude,
               lng: position.coords.longitude,
               maxDistance,
-              emergency: emergencyOnly,
             },
           });
           setRows(data.data || []);
           if (!(data.data || []).length) {
-            setMessage(`No pharmacies found within ${maxDistance} km. Try increasing the distance.`);
+            setMessage("No nearby pharmacies found. Ask pharmacies to set their location in Profile.");
           }
         } catch (error) {
           setMessage(error.response?.data?.message || "Could not load nearby pharmacies");
@@ -44,11 +43,11 @@ function NearbyPharmacyPage() {
       async () => {
         try {
           const { data } = await api.get("/pharmacy/nearby-pharmacies", {
-            params: { maxDistance, emergency: emergencyOnly },
+            params: { maxDistance },
           });
           setRows(data.data || []);
           if (!(data.data || []).length) {
-            setMessage(`No pharmacies found within ${maxDistance} km. Try increasing the distance.`);
+            setMessage("No nearby pharmacies found. Ask pharmacies to set their location in Profile.");
           }
         } catch (error) {
           setMessage(error.response?.data?.message || "Could not load nearby pharmacies");
@@ -59,29 +58,17 @@ function NearbyPharmacyPage() {
     );
   };
 
+  useEffect(() => {
+    loadNearby();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="card">
       <h2>Nearby Pharmacies</h2>
-      <div className="filters">
-        <input
-          type="number"
-          min="1"
-          placeholder="Max Distance (km)"
-          value={maxDistance}
-          onChange={(e) => setMaxDistance(Number(e.target.value || 50))}
-        />
-        <label className="availability-toggle">
-          <input
-            type="checkbox"
-            checked={emergencyOnly}
-            onChange={(e) => setEmergencyOnly(e.target.checked)}
-          />
-          24/7 only
-        </label>
-        <button className="btn" onClick={loadNearby} disabled={loading}>
-          {loading ? "Finding..." : "Find Nearby"}
-        </button>
-      </div>
+      <button className="btn" onClick={loadNearby} disabled={loading}>
+        {loading ? "Finding..." : "Refresh"}
+      </button>
       {message && <p className="message">{message}</p>}
       <div className="list">
         {rows.map((item) => (
@@ -91,7 +78,7 @@ function NearbyPharmacyPage() {
               Distance:{" "}
               {item.distance_km === null || item.distance_km === undefined
                 ? "Location not set"
-                : `${item.distance_km} km`}
+                : `${item.distance_km} away`}
             </p>
             <p>{item.open_24x7 ? "Open 24/7" : "Limited hours"}</p>
             {mapsLink(item.latitude, item.longitude) && (
