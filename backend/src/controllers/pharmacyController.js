@@ -163,7 +163,7 @@ exports.nearbyPharmacies = async (req, res) => {
     const maxDistance = parseNumber(req.query.maxDistance, 20);
 
     const filters = ["TRUE"];
-    const values = [lat, lng, lat];
+    const values = [lat, lng];
 
     if (emergency) {
       filters.push("p.open_24x7 = TRUE");
@@ -182,11 +182,11 @@ exports.nearbyPharmacies = async (req, res) => {
         CASE
           WHEN p.latitude = 0 AND p.longitude = 0 THEN NULL
           ELSE ROUND((
-            6371 * ACOS(LEAST(1, GREATEST(-1,
+            2 * 6371 * ASIN(SQRT(
+              POWER(SIN(RADIANS((p.latitude::double precision - $1::double precision) / 2)), 2) +
               COS(RADIANS($1::double precision)) * COS(RADIANS(p.latitude::double precision)) *
-                COS(RADIANS(p.longitude::double precision) - RADIANS($2::double precision)) +
-              SIN(RADIANS($3::double precision)) * SIN(RADIANS(p.latitude::double precision))
-            )))
+              POWER(SIN(RADIANS((p.longitude::double precision - $2::double precision) / 2)), 2)
+            ))
           )::numeric, 2)
         END AS distance_km
       FROM pharmacies p
@@ -194,11 +194,11 @@ exports.nearbyPharmacies = async (req, res) => {
       AND (
         (p.latitude = 0 AND p.longitude = 0)
         OR (
-          6371 * ACOS(LEAST(1, GREATEST(-1,
+          2 * 6371 * ASIN(SQRT(
+            POWER(SIN(RADIANS((p.latitude::double precision - $1::double precision) / 2)), 2) +
             COS(RADIANS($1::double precision)) * COS(RADIANS(p.latitude::double precision)) *
-              COS(RADIANS(p.longitude::double precision) - RADIANS($2::double precision)) +
-            SIN(RADIANS($3::double precision)) * SIN(RADIANS(p.latitude::double precision))
-          )))
+            POWER(SIN(RADIANS((p.longitude::double precision - $2::double precision) / 2)), 2)
+          ))
         ) <= $${maxDistanceParam}
       )
       ORDER BY (distance_km IS NULL) ASC, distance_km ASC

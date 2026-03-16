@@ -26,10 +26,11 @@ exports.searchMedicine = async (req, res) => {
         p.latitude,
         p.longitude,
         ROUND((
-          6371 * ACOS(
-            COS(RADIANS($1)) * COS(RADIANS(p.latitude)) * COS(RADIANS(p.longitude) - RADIANS($2)) +
-            SIN(RADIANS($3)) * SIN(RADIANS(p.latitude))
-          )
+          2 * 6371 * ASIN(SQRT(
+            POWER(SIN(RADIANS((p.latitude::double precision - $1::double precision) / 2)), 2) +
+            COS(RADIANS($1::double precision)) * COS(RADIANS(p.latitude::double precision)) *
+            POWER(SIN(RADIANS((p.longitude::double precision - $2::double precision) / 2)), 2)
+          ))
         )::numeric, 2) AS distance_km
       FROM medicines m
       JOIN pharmacy_medicines pm ON pm.medicine_id = m.id
