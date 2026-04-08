@@ -160,52 +160,52 @@ exports.nearbyPharmacies = async (req, res) => {
     const lat = parseNumber(req.query.lat, 12.9716);
     const lng = parseNumber(req.query.lng, 77.5946);
     const emergency = req.query.emergency === "true";
-    const maxDistance = parseNumber(req.query.maxDistance, 20);
+    // maxDistance is in km. Keep default generous so "Nearby" isn't empty.
+    const maxDistance = parseNumber(req.query.maxDistance, 500);
 
-    const filters = ["TRUE"];
-    const values = [lat, lng];
-
+    // Fetch pharmacies and compute distance in JS for portability and simpler SQL.
+    const values = [];
+    const filters = [];
     if (emergency) {
-      filters.push("p.open_24x7 = TRUE");
+      filters.push("open_24x7 = TRUE");
     }
 
-    values.push(maxDistance);
-    const maxDistanceParam = values.length;
+    const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";
+    const result = await pool.query(
+      `SELECT id, name, open_24x7, latitude, longitude
+       FROM pharmacies
+       ${where}`,
+      values
+    );
 
-    const query = `
-      SELECT
-        p.id,
-        p.name,
-        p.open_24x7,
-        p.latitude,
-        p.longitude,
-        CASE
-          WHEN p.latitude = 0 AND p.longitude = 0 THEN NULL
-          ELSE ROUND((
-            2 * 6371 * ASIN(SQRT(
-              POWER(SIN(RADIANS((p.latitude::double precision - $1::double precision) / 2)), 2) +
-              COS(RADIANS($1::double precision)) * COS(RADIANS(p.latitude::double precision)) *
-              POWER(SIN(RADIANS((p.longitude::double precision - $2::double precision) / 2)), 2)
-            ))
-          )::numeric, 2)
-        END AS distance_km
-      FROM pharmacies p
-      WHERE ${filters.join(" AND ")}
-      AND (
-        (p.latitude = 0 AND p.longitude = 0)
-        OR (
-          2 * 6371 * ASIN(SQRT(
-            POWER(SIN(RADIANS((p.latitude::double precision - $1::double precision) / 2)), 2) +
-            COS(RADIANS($1::double precision)) * COS(RADIANS(p.latitude::double precision)) *
-            POWER(SIN(RADIANS((p.longitude::double precision - $2::double precision) / 2)), 2)
-          ))
-        ) <= $${maxDistanceParam}
-      )
-      ORDER BY (distance_km IS NULL) ASC, distance_km ASC
-    `;
+    const toRad = (deg) => (deg * Math.PI) / 180;
+    const haversineKm = (lat1, lon1, lat2, lon2) => {
+      const R = 6371;
+      const dLat = toRad(lat2 - lat1);
+      const dLon = toRad(lon2 - lon1);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+          (Math.sin(dLon / 2) * Math.sin(dLon / 2));
+      return 2 * R * Math.asin(Math.min(1, Math.sqrt(a)));
+    };
 
-    const result = await pool.query(query, values);
-    return res.json({ success: true, count: result.rowCount, data: result.rows });
+    const rows = (result.rows || [])
+      .map((p) => {
+        const la = Number(p.latitude);
+        const lo = Number(p.longitude);
+        const hasLocation = Number.isFinite(la) && Number.isFinite(lo) && !(la === 0 && lo === 0);
+        const distance = hasLocation ? haversineKm(lat, lng, la, lo) : null;
+        return {
+          ...p,
+          distance_km: distance === null ? null : Number(distance.toFixed(2)),
+        };
+      })
+      // Only show pharmacies that have location set and are within range.
+      .filter((p) => p.distance_km !== null && p.distance_km <= maxDistance)
+      .sort((a, b) => a.distance_km - b.distance_km);
+
+    return res.json({ success: true, count: rows.length, data: rows });
   } catch (error) {
     console.error("nearbyPharmacies error", error);
     return res.status(500).json({
