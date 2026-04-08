@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../api/axios";
 
 function NearbyPharmacyPage() {
@@ -8,12 +9,17 @@ function NearbyPharmacyPage() {
   // Keep a generous default so users actually see pharmacies without tweaking inputs.
   const maxDistance = 500;
 
-  const mapsLink = (lat, lng) => {
+  const mapRoute = (lat, lng, pharmacyName) => {
     const la = Number(lat);
     const lo = Number(lng);
     if (!Number.isFinite(la) || !Number.isFinite(lo)) return null;
     if (la === 0 && lo === 0) return null;
-    return `https://www.google.com/maps?q=${encodeURIComponent(`${la},${lo}`)}`;
+    const params = new URLSearchParams({
+      lat: String(la),
+      lng: String(lo),
+    });
+    if (pharmacyName) params.set("name", pharmacyName);
+    return `/map?${params.toString()}`;
   };
 
   const loadNearby = useCallback(() => {
@@ -80,15 +86,11 @@ function NearbyPharmacyPage() {
                 : `${item.distance_km} away`}
             </p>
             <p>{item.open_24x7 ? "Open 24/7" : "Limited hours"}</p>
-            {mapsLink(item.latitude, item.longitude) && (
+            {mapRoute(item.latitude, item.longitude, item.name) && (
               <p>
-                <a
-                  href={mapsLink(item.latitude, item.longitude)}
-                  target="_blank"
-                  rel="noreferrer"
-                >
+                <Link to={mapRoute(item.latitude, item.longitude, item.name)}>
                   View on map
-                </a>
+                </Link>
               </p>
             )}
           </div>

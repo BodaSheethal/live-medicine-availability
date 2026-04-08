@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../api/axios";
 
 function MedicineSearchPage() {
@@ -60,14 +61,18 @@ function MedicineSearchPage() {
     });
   }, [rows, filters]);
 
-  const mapsLink = (lat, lng) => {
+  const mapRoute = (lat, lng, pharmacyName) => {
     if (lat === undefined || lng === undefined || lat === null || lng === null) return null;
     const la = Number(lat);
     const lo = Number(lng);
     if (!Number.isFinite(la) || !Number.isFinite(lo)) return null;
     if (la === 0 && lo === 0) return null;
-    // Google Maps supports simple query as lat,lng
-    return `https://www.google.com/maps?q=${encodeURIComponent(`${la},${lo}`)}`;
+    const params = new URLSearchParams({
+      lat: String(la),
+      lng: String(lo),
+    });
+    if (pharmacyName) params.set("name", pharmacyName);
+    return `/map?${params.toString()}`;
   };
 
   return (
@@ -148,10 +153,10 @@ function MedicineSearchPage() {
                       {Number(item.stock) > 0 ? "Available" : "Out of stock"}
                     </td>
                     <td>
-                      {mapsLink(item.latitude, item.longitude) ? (
-                        <a href={mapsLink(item.latitude, item.longitude)} target="_blank" rel="noreferrer">
+                      {mapRoute(item.latitude, item.longitude, item.pharmacy_name) ? (
+                        <Link to={mapRoute(item.latitude, item.longitude, item.pharmacy_name)}>
                           View map
-                        </a>
+                        </Link>
                       ) : (
                         "-"
                       )}
@@ -172,11 +177,11 @@ function MedicineSearchPage() {
                 <p className={Number(item.stock) > 0 ? "in-stock" : "out-stock"}>
                   Stock: {item.stock > 0 ? `${item.stock} available` : "Out of stock"}
                 </p>
-                {mapsLink(item.latitude, item.longitude) && (
+                {mapRoute(item.latitude, item.longitude, item.pharmacy_name) && (
                   <p>
-                    <a href={mapsLink(item.latitude, item.longitude)} target="_blank" rel="noreferrer">
+                    <Link to={mapRoute(item.latitude, item.longitude, item.pharmacy_name)}>
                       View on map
-                    </a>
+                    </Link>
                   </p>
                 )}
                 {Number(item.stock) > 0 && (

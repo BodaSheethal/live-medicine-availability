@@ -12,6 +12,7 @@ import PharmacyStockPage from "./pages/PharmacyStockPage";
 import PharmacyAddStockPage from "./pages/PharmacyAddStockPage";
 import PharmacySearchStockPage from "./pages/PharmacySearchStockPage";
 import PharmacyProfilePage from "./pages/PharmacyProfilePage";
+import MapPage from "./pages/MapPage";
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem("token");
@@ -58,6 +59,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <NearbyPharmacyPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/map"
+            element={
+              <ProtectedRoute>
+                <MapPage />
               </ProtectedRoute>
             }
           />

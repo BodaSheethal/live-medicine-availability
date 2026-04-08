@@ -80,6 +80,34 @@ body {
   flex-wrap: wrap;
 }
 
+.map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.map-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.map-wrap {
+  margin-top: 12px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #dbe3ee;
+  height: 60vh;
+  min-height: 320px;
+}
+
+.leaflet-map {
+  height: 100%;
+  width: 100%;
+}
+
 .container {
   max-width: 900px;
   margin: 24px auto;
