@@ -103,9 +103,24 @@ body {
   min-height: 320px;
 }
 
+.map-wrap-profile {
+  height: 300px;
+  min-height: 300px;
+  margin-bottom: 12px;
+}
+
 .leaflet-map {
   height: 100%;
   width: 100%;
+}
+
+.form-row {
+  display: flex;
+  gap: 10px;
+}
+
+.form-row > * {
+  flex: 1;
 }
 
 .container {
@@ -459,6 +474,10 @@ select {
   }
 
   .actions {
+    flex-direction: column;
+  }
+
+  .form-row {
     flex-direction: column;
   }
 
