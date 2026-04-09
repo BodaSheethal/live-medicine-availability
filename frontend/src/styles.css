@@ -377,6 +377,11 @@ select {
   color: #b02a37;
 }
 
+.status {
+  margin-top: 10px;
+  color: #0b57cc;
+}
+
 .auth-helper {
   margin: 2px 0 0;
   font-size: 14px;
