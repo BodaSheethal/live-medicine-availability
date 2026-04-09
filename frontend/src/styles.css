@@ -379,7 +379,11 @@ select {
 
 .status {
   margin-top: 10px;
-  color: #0b57cc;
+  color: #8a2c2c;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  padding: 8px 10px;
+  border-radius: 8px;
 }
 
 .auth-helper {
