@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { Link } from "react-router-dom";
 import api from "../api/axios";
 import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";
 import L from "leaflet";
@@ -31,6 +32,19 @@ function PharmacyProfilePage() {
 
   // Default center (Bengaluru) so the map isn't blank even before setting location.
   const defaultCenter = [12.9716, 77.5946];
+
+  const mapRoute = (lat, lng, pharmacyName) => {
+    const la = Number(lat);
+    const lo = Number(lng);
+    if (!Number.isFinite(la) || !Number.isFinite(lo)) return null;
+    if (la === 0 && lo === 0) return null;
+    const params = new URLSearchParams({
+      lat: String(la),
+      lng: String(lo),
+    });
+    if (pharmacyName) params.set("name", pharmacyName);
+    return `/map?${params.toString()}`;
+  };
 
   const loadProfile = async () => {
     try {
@@ -96,6 +110,11 @@ function PharmacyProfilePage() {
 
   const currentPos =
     form.latitude && form.longitude ? [Number(form.latitude), Number(form.longitude)] : null;
+
+  const pharmacyLabel =
+    profile?.user?.pharmacyStoreName || profile?.pharmacy?.name || profile?.user?.name || "Pharmacy";
+
+  const viewMapUrl = mapRoute(form.latitude, form.longitude, pharmacyLabel);
 
   return (
     <div className="card">
@@ -165,9 +184,16 @@ function PharmacyProfilePage() {
             />
             Open 24/7
           </label>
-          <button className="btn" type="submit">
-            Save Profile
-          </button>
+          <div className="actions">
+            <button className="btn" type="submit">
+              Save Profile
+            </button>
+            {viewMapUrl && (
+              <Link className="btn secondary" to={viewMapUrl}>
+                View on map
+              </Link>
+            )}
+          </div>
         </form>
       </div>
 
