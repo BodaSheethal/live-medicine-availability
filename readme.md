@@ -2,7 +2,8 @@ This project is used to find the nearby pharmacy to save the user time and user 
 # Live Medicine Availability Finder
 
 Live Medicine Availability Finder is a full‑stack web application that helps users quickly find which nearby pharmacies have a required medicine in stock, along with price and distance. Pharmacies can maintain their live stock and location, and an admin can verify pharmacy accounts.
- Live Host:https://live-medicine-availability-1.onrender.com/
+
+Live Host:https://live-medicine-availability-1.onrender.com/
 ## Features
 
 ### User
